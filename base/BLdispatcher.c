@@ -1,6 +1,7 @@
 #include    "base/BLdispatcher.h"
 #include    <errno.h>
 #include    <stdlib.h>
+#include    <stdbool.h>
 
 int BLdispatchers_new(pBLdispatchers_t* ppdispatchers, size_t item_count)
 {
@@ -102,6 +103,13 @@ int BLdispatchers_clear(pBLdispatchers_t dispatchers, size_t index)
     return err;
 }
 
+static bool BLdispatcher_isdisabled(pcBLdispatcher_t dispatcher)
+{
+    return
+        (dispatcher->core.handler == NULL) ||
+        ((dispatcher->core.down_counter_initial == 0) && (dispatcher->core.down_counter == 0));
+}
+
 int BLdispatchers_dispatch(pBLdispatchers_t dispatchers)
 {
     int err = EXIT_SUCCESS;
@@ -109,7 +117,7 @@ int BLdispatchers_dispatch(pBLdispatchers_t dispatchers)
         for (size_t i = 0; i < dispatchers->item_count; i++)
         {
             pBLdispatcher_t dispatcher = &dispatchers->dispatchers[i];
-            if (dispatcher->core.handler == NULL)
+            if (BLdispatcher_isdisabled(dispatcher))
             {
                 continue;
             }

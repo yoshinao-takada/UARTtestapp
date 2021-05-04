@@ -80,30 +80,34 @@ int main()
         fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY);
         if (-1 == fd)
         {
+            err = errno;
             fprintf(stderr, "%s,%d,error in open(), errno=%d(0x%04x)\n",
-                __FILE__, __LINE__, errno, errno);
+                __FILE__, __LINE__, err, err);
             break;
         }
         if (-1 == tcgetattr(fd, &iosetup))
         {
+            err = errno;
             fprintf(stderr, "%s,%d,error in tcgetattr(), errno=%d(0x%04x)\n",
-                __FILE__, __LINE__, errno, errno);
+                __FILE__, __LINE__, err, err);
             break;
         }
         cfsetispeed(&iosetup, B9600);
         cfsetospeed(&iosetup, B9600);
         if (-1 == tcsetattr(fd, TCSAFLUSH, &iosetup))
         {
+            err = errno;
             fprintf(stderr, "%s,%d,error in tcsetattr(), errno=%d(0x%04x)\n",
-                __FILE__, __LINE__, errno, errno);
+                __FILE__, __LINE__, err, err);
             break;
         }
         if ((pthread_create(&thread_sleep, NULL, blocking_sleep_thread, NULL)) ||
             (pthread_create(&thread_nanosleep, NULL, blocking_nanosleep_thread, NULL)) ||
             (pthread_create(&thread_read, NULL, blocking_read_thread, &fd)))
         {
+            err = errno;
             fprintf(stderr, "%s,%d,error in pthread_create(), errno=%d(0x%04x)\n",
-                __FILE__, __LINE__, errno, errno);
+                __FILE__, __LINE__, err, err);
             break;
         }
         sleep(1); // wait awhile for the threads have started.
@@ -112,8 +116,9 @@ int main()
             pthread_kill(thread_nanosleep, SIGCONT) ||
             pthread_kill(thread_read, SIGHUP))
         {
+            err = errno;
             fprintf(stderr, "%s,%d,error in pthread_kill(), errno=%d(0x%04x)\n",
-                __FILE__, __LINE__, errno, errno);
+                __FILE__, __LINE__, err, err);
             break;
         }
         // synchronize with the thread terminations.

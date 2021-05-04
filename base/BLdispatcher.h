@@ -20,6 +20,7 @@ typedef struct {
     BLdispatcher_core_t core;
     pthread_mutex_t mutex;
 } BLdispatcher_t, *pBLdispatcher_t;
+typedef const BLdispatcher_t *pcBLdispatcher_t;
 
 typedef struct {
     size_t item_count; // number of dispatchers

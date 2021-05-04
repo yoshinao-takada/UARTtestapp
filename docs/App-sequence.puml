@@ -6,7 +6,8 @@ participant ReadThread
 loop N times
     IntervalTimer -> TimerEventDispatcher1 : Systick
     TimerEventDispatcher1 -> ReadThread : write(serialport)
-    TimerEventDispatcher2 -> ReadThread : SIGINT
     TimerEventDispatcher2 <- ReadThread : reload
 end
+TimerEventDispatcher2 -> ReadThread : timeout and send SIGINT
+ReadThread -> ReadThread : terminate thread
 @enduml
