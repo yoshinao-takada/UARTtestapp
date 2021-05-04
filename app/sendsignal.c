@@ -8,69 +8,63 @@
 #include    <sys/stat.h>
 #include    <fcntl.h>
 #include    <errno.h>
-#include    <assert.h>
 #pragma region signal_handlers
 static void sigint_handler(int signum)
 {
     if (signum != SIGINT) return;
-    printf("%s() entered\n", __FUNCTION__);
+    fprintf(stderr, "%s() entered\n", __FUNCTION__);
 }
 
 static void sigcont_handler(int signum)
 {
     if (signum != SIGCONT) return;
-    printf("%s() entered\n", __FUNCTION__);
+    fprintf(stderr, "%s() entered\n", __FUNCTION__);
 }
 
 
 static void sighup_handler(int signum)
 {
     if (signum != SIGHUP) return;
-    printf("%s() entered\n", __FUNCTION__);
+    fprintf(stderr, "%s() entered\n", __FUNCTION__);
 }
 #pragma endregion signal_handlers
-static void set_sigactions()
+static void set_sigactions(int signum, __sighandler_t handler)
 {
     struct sigaction sa;
     sa.sa_flags = 0;
-    sa.sa_handler = sigint_handler;
+    sa.sa_handler = handler;
     sigemptyset(&sa.sa_mask);
-    sigaddset(&sa.sa_mask, SIGINT);
-    assert(0 == sigaction(SIGINT, &sa, NULL));
-    sa.sa_handler = sigcont_handler;
-    sigemptyset(&sa.sa_mask);
-    sigaddset(&sa.sa_mask, SIGCONT);
-    assert(0 == sigaction(SIGCONT, &sa, NULL));
-    sa.sa_handler = sighup_handler;
-    sigemptyset(&sa.sa_mask);
-    sigaddset(&sa.sa_mask, SIGHUP);
-    assert(0 == sigaction(SIGHUP, &sa, NULL));
+    sigaddset(&sa.sa_mask, signum);
+    if (sigaction(signum, &sa, NULL))
+    {
+        abort();
+    }
 }
 #pragma region thread_procedures
 static void* blocking_sleep_thread(void* param)
 {
-    set_sigactions();
+    set_sigactions(SIGINT, sigint_handler);
     int sleep_result = sleep(100);
-    printf("%s(), sleep_result = %d\n", __FUNCTION__, sleep_result);
+    fprintf(stderr, "%s(), sleep_result = %d\n", __FUNCTION__, sleep_result);
     return param;
 }
 
 static void* blocking_nanosleep_thread(void* param)
 {
-    set_sigactions();
+    set_sigactions(SIGCONT, sigcont_handler);
     struct timespec t = { 100, 0 };
     int nanosleep_result = nanosleep(&t, NULL);
-    printf("%s, nanosleep_result = %d\n", __FUNCTION__, nanosleep_result);
+    fprintf(stderr, "%s, nanosleep_result = %d\n", __FUNCTION__, nanosleep_result);
     return param;
 }
 
 static void* blocking_read_thread(void* param)
 {
-    set_sigactions();
+    set_sigactions(SIGHUP, sighup_handler);
     int *fd = (int*)param;
     char buf[256];
     ssize_t read_result = read(*fd, (void*)buf, sizeof(buf));
-    printf("%s, read_result = %d\n", __FUNCTION__, read_result);
+    fprintf(stderr, "%s, read_result = %d\n", __FUNCTION__, read_result);
     return param;
 }
 #pragma endregion thread_procedures
@@ -123,9 +117,9 @@ int main()
             break;
         }
         // synchronize with the thread terminations.
-        printf("pthread_join(thread_sleep) = %d\n", pthread_join(thread_sleep, &thread_sleep_return));
-        printf("pthread_join(thread_nanosleep) = %d\n", pthread_join(thread_nanosleep, &thread_nanosleep_return));
-        printf("pthread_join(thread_read) = %d\n", pthread_join(thread_read, &thread_read_return));
+        fprintf(stderr, "pthread_join(thread_sleep) = %d\n", pthread_join(thread_sleep, &thread_sleep_return));
+        fprintf(stderr, "pthread_join(thread_nanosleep) = %d\n", pthread_join(thread_nanosleep, &thread_nanosleep_return));
+        fprintf(stderr, "pthread_join(thread_read) = %d\n", pthread_join(thread_read, &thread_read_return));
     } while (0);
     return err;
 }
