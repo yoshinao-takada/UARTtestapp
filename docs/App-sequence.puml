@@ -1,0 +1,12 @@
+@startuml
+participant IntervalTimer
+participant TimerEventDispatcher1
+participant TimerEventDispatcher2
+participant ReadThread
+loop N times
+    IntervalTimer -> TimerEventDispatcher1 : Systick
+    TimerEventDispatcher1 -> ReadThread : write(serialport)
+    TimerEventDispatcher2 -> ReadThread : SIGINT
+    TimerEventDispatcher2 <- ReadThread : reload
+end
+@enduml
